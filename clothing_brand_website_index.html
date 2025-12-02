@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Your Clothing Brand — Shop</title>
+  <meta name="description" content="Simple, free-to-host clothing store (Jackets, T-shirts, Mnqwazi) with PayPal Checkout integration" />
+
+  <!-- Minimal styling (lightweight) -->
+  <style>
+    :root{--accent:#1f2937;--muted:#6b7280}
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;line-height:1.4;margin:0;color:#0f172a}
+    header{background:linear-gradient(90deg,#f8fafc,#eef2ff);padding:18px 20px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    nav a{margin-left:12px;color:var(--accent);text-decoration:none;font-weight:600}
+    main{padding:28px 20px;max-width:1100px;margin:0 auto}
+    .hero{display:flex;gap:24px;align-items:center}
+    .hero .text{flex:1}
+    .hero h1{font-size:28px;margin:0 0 8px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;margin-top:20px}
+    .card{border:1px solid #e6eef8;border-radius:10px;padding:12px;background:white}
+    .card img{width:100%;height:220px;object-fit:cover;border-radius:8px}
+    .card h3{margin:10px 0 6px;font-size:16px}
+    .price{font-weight:700}
+    .btn{display:inline-block;padding:8px 12px;border-radius:8px;background:var(--accent);color:white;text-decoration:none;cursor:pointer;border:none}
+    .muted{color:var(--muted);font-size:14px}
+    .cart-btn{position:fixed;right:20px;bottom:20px;background:#111827;color:white;border-radius:999px;padding:12px 16px;box-shadow:0 8px 20px rgba(2,6,23,.2);z-index:999}
+    .cart-count{background:#ef4444;border-radius:999px;padding:2px 7px;margin-left:8px;font-weight:700}
+    /* cart drawer */
+    .drawer{position:fixed;right:0;top:0;height:100%;width:380px;background:#fff;box-shadow:-12px 0 30px rgba(2,6,23,.15);transform:translateX(100%);transition:transform .28s ease;z-index:1000;padding:18px;overflow:auto}
+    .drawer.open{transform:translateX(0)}
+    .drawer h2{margin:0 0 12px}
+    .cart-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed #eef2ff}
+    .cart-item img{width:70px;height:70px;object-fit:cover;border-radius:6px}
+    .qty{display:inline-flex;align-items:center;gap:6px}
+    .qty button{padding:4px 8px;border-radius:6px;border:1px solid #e6eef8;background:white}
+    footer{padding:20px;text-align:center;color:var(--muted)}
+    @media (max-width:600px){.hero{flex-direction:column}.drawer{width:100%}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">CB</div>
+      <div>
+        <div style="font-weight:800">Your Clothing Brand</div>
+        <div class="muted" style="font-size:12px">Jackets • T-Shirts • Mnqwazi</div>
+      </div>
+    </div>
+    <nav>
+      <a href="#shop">Shop</a>
+      <a href="#about">About</a>
+      <a id="open-cart" class="cart-link" style="cursor:pointer">Cart <span id="cart-count" class="cart-count">0</span></a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="text">
+        <h1>Quality clothing with local style</h1>
+        <p class="muted">Browse our Jackets, T‑shirts and traditional Mnqwazi — built for comfort and crafted with care. Free to host, easy to customize, and accepts payments via PayPal (ZAR).</p>
+        <p style="margin-top:12px"><a href="#shop" class="btn">Start shopping</a></p>
+      </div>
+      <div style="width:360px">
+        <img src="https://images.unsplash.com/photo-1520975914701-5b9a8f7f3b2a?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder" alt="clothing" style="width:100%;border-radius:10px;object-fit:cover;height:220px">
+      </div>
+    </section>
+
+    <section id="shop">
+      <h2 style="margin-top:28px">Shop</h2>
+      <div class="grid" id="products-grid"></div>
+    </section>
+
+    <section id="about">
+      <h2 style="margin-top:28px">About</h2>
+      <p class="muted">This is a lightweight static store you can host for free (GitHub Pages, Netlify, etc.) — it uses a client-side cart and PayPal Checkout for payment processing. You will need a PayPal Business account to accept live payments (instructions below).</p>
+    </section>
+  </main>
+
+  <button id="cart-fab" class="cart-btn">Cart <span id="cart-count-2" class="cart-count">0</span></button>
+
+  <aside id="cart-drawer" class="drawer" aria-hidden="true">
+    <button id="close-drawer" style="float:right" class="btn">Close</button>
+    <h2>Your Cart</h2>
+    <div id="cart-items"></div>
+    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+      <div class="muted">Total:</div>
+      <div style="font-weight:800" id="cart-total">R0.00</div>
+    </div>
+    <div style="margin-top:18px">
+      <div id="paypal-button-container"></div>
+    </div>
+
+    <div style="margin-top:16px" class="muted">Note: To accept real payments replace <code>YOUR_CLIENT_ID</code> in the PayPal SDK script with your PayPal client ID. For development, you can use a sandbox client ID.</div>
+  </aside>
+
+  <footer>
+    © <span id="year"></span> Your Clothing Brand — Built with a free static site and PayPal Checkout
+  </footer>
+
+  <!-- Products data + cart logic -->
+  <script>
+    // --- PRODUCT DATA ---
+    const PRODUCTS = [
+      { id: 'jkt-001', title: 'Classic Bomber Jacket', category: 'Jackets', price: 899.00, img: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder' },
+      { id: 'jkt-002', title: 'Denim Jacket', category: 'Jackets', price: 749.00, img: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder' },
+      { id: 'tee-001', title: 'Organic Cotton T‑Shirt', category: 'T-Shirts', price: 249.00, img: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder' },
+      { id: 'tee-002', title: 'Graphic Tee — Sun', category: 'T-Shirts', price: 259.00, img: 'https://images.unsplash.com/photo-1530845641362-2b19b9a7bd1f?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder' },
+      { id: 'mnq-001', title: 'Mnqwazi Classic', category: 'Mnqwazi', price: 1199.00, img: 'https://images.unsplash.com/photo-1520975914701-5b9a8f7f3b2a?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder' },
+      { id: 'mnq-002', title: 'Mnqwazi Modern Fit', category: 'Mnqwazi', price: 1399.00, img: 'https://images.unsplash.com/photo-1520975914701-5b9a8f7f3b2a?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder' }
+    ];
+
+    // --- simple cart stored in localStorage ---
+    const CART_KEY = 'simple_store_cart_v1';
+    function loadCart(){ try{ return JSON.parse(localStorage.getItem(CART_KEY)) || {}; }catch(e){ return {}; } }
+    function saveCart(cart){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
+
+    function addToCart(productId){ const cart = loadCart(); cart[productId] = (cart[productId]||0)+1; saveCart(cart); renderCart(); }
+    function removeFromCart(productId){ const cart = loadCart(); delete cart[productId]; saveCart(cart); renderCart(); }
+    function changeQty(productId, delta){ const cart = loadCart(); cart[productId] = (cart[productId]||0)+delta; if(cart[productId] <= 0) delete cart[productId]; saveCart(cart); renderCart(); }
+
+    function cartItemsArray(){ const cart = loadCart(); return Object.keys(cart).map(id=>{ const p = PRODUCTS.find(x=>x.id===id); return { ...p, qty: cart[id] }; }); }
+    function cartTotal(){ const items = cartItemsArray(); const total = items.reduce((s,i)=>s + (i.price * i.qty), 0); return (Math.round(total*100)/100).toFixed(2); }
+
+    // --- render products ---
+    function renderProducts(){ const grid = document.getElementById('products-grid'); grid.innerHTML=''; PRODUCTS.forEach(p=>{
+      const el = document.createElement('div'); el.className='card';
+      el.innerHTML = `
+        <img src="${p.img}" alt="${p.title}">
+        <h3>${p.title}</h3>
+        <div class="muted">${p.category}</div>
+        <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+          <div class="price">R${p.price.toFixed(2)}</div>
+          <button class="btn" onclick="addToCart('${p.id}')">Add to cart</button>
+        </div>`;
+      grid.appendChild(el);
+    }); }
+
+    // --- render cart drawer ---
+    function renderCart(){ const items = cartItemsArray(); const itemsEl = document.getElementById('cart-items'); itemsEl.innerHTML=''; if(items.length===0){ itemsEl.innerHTML = '<div class="muted">Your cart is empty.</div>'; }
+      items.forEach(it=>{
+        const el = document.createElement('div'); el.className='cart-item';
+        el.innerHTML = `
+          <img src="${it.img}" alt="${it.title}">
+          <div style="flex:1">
+            <div style="font-weight:700">${it.title}</div>
+            <div class="muted">R${it.price.toFixed(2)} each</div>
+            <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+              <div class="qty">
+                <button onclick="changeQty('${it.id}',-1)">-</button>
+                <div style="min-width:26px;text-align:center">${it.qty}</div>
+                <button onclick="changeQty('${it.id}',1)">+</button>
+              </div>
+              <button style="margin-left:8px" onclick="removeFromCart('${it.id}')">Remove</button>
+            </div>
+          </div>
+        `;
+        itemsEl.appendChild(el);
+      });
+      // update totals and counts
+      const total = cartTotal(); document.getElementById('cart-total').textContent = 'R' + total;
+      const count = items.reduce((s,i)=>s+i.qty,0);
+      document.getElementById('cart-count').textContent = count;
+      document.getElementById('cart-count-2').textContent = count;
+      document.getElementById('cart-count').style.display = count? 'inline-block':'none';
+      document.getElementById('cart-count-2').style.display = count? 'inline-block':'none';
+    }
+
+    // --- drawer open/close handlers ---
+    const drawer = document.getElementById('cart-drawer');
+    document.getElementById('cart-fab').addEventListener('click', ()=>drawer.classList.add('open'));
+    document.getElementById('open-cart').addEventListener('click', ()=>drawer.classList.add('open'));
+    document.getElementById('close-drawer').addEventListener('click', ()=>drawer.classList.remove('open'));
+
+    // --- PayPal integration ---
+    // NOTE: Replace YOUR_CLIENT_ID with your PayPal Client ID (live or sandbox). Currency is ZAR.
+  </script>
+
+  <!-- PayPal SDK: replace YOUR_CLIENT_ID with your actual client id -->
+  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=ZAR"></script>
+  <script>
+    // Render PayPal button and use cartTotal() when creating the order
+    function setupPayPal(){
+      if(typeof paypal === 'undefined') return;
+      // Clean previous if any
+      const container = document.getElementById('paypal-button-container');
+      container.innerHTML = '';
+
+      paypal.Buttons({
+        style: { layout: 'vertical', shape: 'rect' },
+        createOrder: function(data, actions){
+          const total = cartTotal();
+          if(Number(total) <= 0){ alert('Your cart is empty'); return; }
+          return actions.order.create({ purchase_units:[{ amount:{ value: total, currency_code: 'ZAR' } }] });
+        },
+        onApprove: function(data, actions){
+          return actions.order.capture().then(function(details){
+            // Simple success flow — you should verify transactions server-side in production
+            alert('Thanks ' + (details.payer.name && details.payer.name.given_name ? details.payer.name.given_name : '') + '! Payment completed.');
+            // clear cart
+            localStorage.removeItem(CART_KEY);
+            renderCart();
+            drawer.classList.remove('open');
+          });
+        },
+        onError: function(err){ console.error(err); alert('Payment error — see console for details'); }
+      }).render('#paypal-button-container');
+    }
+
+    // --- page init ---
+    (function(){ renderProducts(); renderCart(); setupPayPal(); document.getElementById('year').textContent = new Date().getFullYear();
+      // re-render PayPal button when cart changes (simple hack: listen to storage changes)
+      window.addEventListener('storage', ()=>{ renderCart(); setupPayPal(); });
+      // also re-setup when drawer opens
+      document.getElementById('cart-fab').addEventListener('click', setupPayPal);
+    })();
+  </script>
+
+  <!-- Deployment & integration notes -->
+  <!--
+    HOW TO DEPLOY (FREE):
+      1) Create a new GitHub repository and add this file as index.html. Enable GitHub Pages (branch: main, folder: /). Your site will be available at https://<username>.github.io/<repo>/
+      2) Or drag-and-drop this file to Netlify (or Vercel) for free static hosting.
+
+    PAYMENT SETUP:
+      - PayPal: Create a PayPal Business account (https://www.paypal.com). Create an app in Developer Dashboard to get a CLIENT ID. Replace YOUR_CLIENT_ID in the PayPal SDK script above.
+        Use sandbox client id for testing (sandbox accounts are free). For live payments use your live client id.
+      - PayFast (South Africa): If you prefer PayFast, you'll need server-side code or their simple form post integration. PayFast requires merchant credentials and cannot be securely integrated purely client-side.
+
+    IMPORTANT:
+      - This example uses client-side order creation for simplicity. For production, always verify payment server-side and prevent tampering.
+      - Replace placeholder images with your product photos and update product prices, sizes, and stock.
+  -->
+</body>
+</html>
